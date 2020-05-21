@@ -19,6 +19,10 @@ class RustExtension:
         path to the cargo.toml manifest file
       args : [string]
         a list of extra argumenents to be passed to cargo.
+      platform_target : string
+        specify a platform target to compile to
+      plat_name : string
+        specify the platform name to target
       features : [string]
         a list of features to also build
       rust_version : string
@@ -54,6 +58,8 @@ class RustExtension:
         target,
         path="Cargo.toml",
         args=None,
+        platform_target=None,
+        plat_name=None,
         features=None,
         rustc_flags=None,
         rust_version=None,
@@ -83,11 +89,18 @@ class RustExtension:
         self.script = script
         self.native = native
         self.optional = optional
+        self.plat_name = plat_name
 
         if features is None:
             features = []
 
         self.features = [s.strip() for s in features]
+
+        self.platform_target = platform_target
+        if platform_target is not None:
+          if self.args is None: self.args = []
+          self.args.append("--target")
+          self.args.append(platform_target)
 
         # get relative path to Cargo manifest file
         path = os.path.relpath(path)

@@ -94,6 +94,8 @@ class build_rust(Command):
         # The decoding is needed for python 3.5 compatibility
         metadata = json.loads(check_output(metadata_command).decode("utf-8"))
         target_dir = metadata["target_directory"]
+        if ext.platform_target is not None:
+            target_dir = os.path.join(target_dir, ext.platform_target)
 
         if not os.path.exists(ext.path):
             raise DistutilsFileError(
@@ -123,8 +125,8 @@ class build_rust(Command):
                 args.append("--release")
             if quiet:
                 args.append("-q")
-            elif self.verbose:
-                args.append("--verbose")
+            #elif self.verbose:
+            #    args.append("--verbose")
 
         else:
             args = (
@@ -136,8 +138,8 @@ class build_rust(Command):
                 args.append("--release")
             if quiet:
                 args.append("-q")
-            elif self.verbose:
-                args.append("--verbose")
+            #elif self.verbose:
+            #    args.append("--verbose")
 
             args.extend(["--", "--crate-type", "cdylib"])
             args.extend(ext.rustc_flags or [])
@@ -237,11 +239,13 @@ class build_rust(Command):
                     "rust build failed; unable to find any %s in %s"
                     % (wildcard_so, artifactsdir)
                 )
+        print("Dylib paths:", dylib_paths)
 
         # Ask build_ext where the shared library would go if it had built it,
         # then copy it there.
         build_ext = self.get_finalized_command("build_ext")
         build_ext.inplace = self.inplace
+
 
         for target_fname, dylib_path in dylib_paths:
             if not target_fname:
@@ -259,6 +263,9 @@ class build_rust(Command):
                 ext.install_script(ext_path)
             else:
                 ext_path = build_ext.get_ext_fullpath(target_fname)
+                ext_path, ender = os.path.splitext(ext_path)
+                ext_path, _ = os.path.splitext(ext_path)
+                ext_path += ender
 
             try:
                 os.makedirs(os.path.dirname(ext_path))
